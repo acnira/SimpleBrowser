@@ -1,27 +1,60 @@
+/* eslint-disable prettier/prettier */
 import React, {Component} from 'react';
-import {View, TouchableOpacity, Text, StyleSheet} from 'react-native';
+import {View, TouchableOpacity, Button, Text, StyleSheet, Modal, Image} from 'react-native';
+import NetInfo from '@react-native-community/netinfo';
 import {WebView} from 'react-native-webview';
 
 class App extends Component {
-
   constructor(props) {
     super(props);
-    // 產生一個可以儲存 textInput DOM element 的 ref
     this.WEBVIEW = React.createRef();
-    this.state=({
-      homeUrl: 'https://github.com/facebook/react-native',
-      currentUrl: 'https://github.com/facebook/react-native',
+    this.state = {
+      homeUrl: 'https://comdir.ust.hk',
+      currentUrl: 'https://comdir.ust.hk',
+
       canGoBack: false,
-      canGoForward: false
-    })
+      canGoForward: false,
+      networkConnected: true,
+      showDialog: false,
+    };
+
+    NetInfo.addEventListener(state => {
+      console.log("Connection type", state.type);
+      console.log("Is connected?", state.isConnected);
+
+      if (this.state.networkConnected !== state.isConnected) {
+        this.setState({
+          networkConnected: state.isConnected,
+        });
+        if (this.WEBVIEW.current) {
+          if (state.isConnected) {
+            this.WEBVIEW.current.reload();
+            if (this.state.showDialog) {
+              this.hideDialog();
+            }
+          } else {
+            this.WEBVIEW.current.stopLoading();
+            //Alert.alert('Ops! Seems you have disconnected from internet');
+            this.showDialog();
+          }
+        }
+      }
+    });
   }
 
+  componentDidMount() {
+    this.hideDialog = this.hideDialog.bind(this);
+    this.showDialog = this.showDialog.bind(this);
+}
+
   onNavigationStateChange(navState) {
+    navState = navState.nativeEvent;
     this.setState({
-      currentUrl: navState.uri,
+      currentUrl: navState.url,
       canGoBack: navState.canGoBack,
-      canGoForward: navState.canGoForward
+      canGoForward: navState.canGoForward,
     });
+    console.log('current url: ',navState.url);
   }
 
   onBack() {
@@ -38,83 +71,124 @@ class App extends Component {
 
   onHomePressed() {
     this.setState({
-      currentUrl: this.state.homeUrl
+      currentUrl: this.state.homeUrl,
     });
-    this.onReload();
+    //this.onReload();
+  }
+
+  showDialog() {
+    this.setState({showDialog: true});
+  }
+
+  hideDialog() {
+    this.setState({showDialog: false});
   }
 
   render() {
-    const homeUrl=this.state.homeUrl;
     return (
-      <View style={{ flex: 1 }}>
-        <WebView
-          ref={this.WEBVIEW}
-          source={{uri: homeUrl}}
-          style={styles.webview}
-          onNavigationStateChange={this.onNavigationStateChange.bind(this)}
-          onError={e => {
-            return console.log(e);
-          }}
-        />
-        <View style={styles.topbar} >
+      <View style={{flex: 1}}>
+        {this.state.networkConnected ?
+          <WebView
+            ref={this.WEBVIEW}
+            source={{uri: this.state.currentUrl}}
+            style={styles.webview}
+            setSupportMultipleWindows={false}
+            onLoadStart={this.onNavigationStateChange.bind(this)}
+          /> :
+          <View style={styles.errPage}>
+            <Text style={styles.errMsg}>Ops! Seems you are disconnected from internet.</Text>
+          </View>
+        }
+        <View style={styles.topbar}>
           <View style={styles.navBtn}>
             <TouchableOpacity
               disabled={!this.state.canGoBack}
-              onPress={this.onBack.bind(this)}
-              >
-              <Text style={this.state.canGoBack?styles.topbarText:styles.topbarTextDisabled}>Go Back</Text>
+              onPress={this.onBack.bind(this)}>
+              <Image style={
+                this.state.canGoBack && this.state.networkConnected ?
+                  styles.toolIcon :
+                  styles.toolIconDisabled}
+                source={require('./assets/left-arrow.png')}
+              />
             </TouchableOpacity>
           </View>
           <View style={styles.navBtn}>
             <TouchableOpacity
               disabled={!this.state.canGoForward}
-              onPress={this.onForward.bind(this)}
-              >
-              <Text style={this.state.canGoForward?styles.topbarText:styles.topbarTextDisabled}>Go Forward</Text>
+              onPress={this.onForward.bind(this)}>
+              <Image style={
+                this.state.canGoForward && this.state.networkConnected ?
+                  styles.toolIcon :
+                  styles.toolIconDisabled}
+                source={require('./assets/right-arrow.png')}
+              />
             </TouchableOpacity>
           </View>
           <View style={styles.navBtn}>
-            <TouchableOpacity
-              onPress={this.onHomePressed.bind(this)}
-              >
-              <Text style={styles.topbarText}>Home</Text>
+            <TouchableOpacity onPress={this.onHomePressed.bind(this)}>
+            <Image style={
+                this.state.networkConnected ?
+                  styles.toolIcon :
+                  styles.toolIconDisabled}
+                source={require('./assets/home.png')}
+              />
             </TouchableOpacity>
           </View>
           <View style={styles.navBtn}>
-          <TouchableOpacity
-            onPress={this.onReload.bind(this)}
-            >
-            <Text style={styles.topbarText}>Reload</Text>
-          </TouchableOpacity>
+            <TouchableOpacity onPress={this.onReload.bind(this)}>
+            <Image style={
+                this.state.networkConnected ?
+                  styles.toolIcon :
+                  styles.toolIconDisabled}
+                source={require('./assets/refresh.png')}
+              />
+            </TouchableOpacity>
           </View>
         </View>
       </View>
-      
     );
   }
 }
 
 const styles = StyleSheet.create({
-  webview:{
-
+  container: {
+    flex: 1,
   },
-  topbar:{
-    borderColor: "#959595",
-    borderWidth: 2,
-    flexDirection:'row', 
-    alignItems:'center', 
-    justifyContent:'center'
+  webview: {},
+  errPage:{
+    flex: 1,
+    padding: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  navBtn:{
-    flex: 1
+  errMsg: {
+    fontSize: 30,
+    padding: 30,
   },
-  topbarText:{
-    fontSize: 20,
-    color: "#2e79bf"
+  topbar: {
+    borderTopColor: '#7d7d7d',
+    borderTopWidth: 3,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingTop: 15,
+    paddingBottom: 15,
+    paddingHorizontal: 10,
+    backgroundColor: '#dedede',
   },
-  topbarTextDisabled:{
-    fontSize: 20,
-    color: "#454545"
+  toolIcon: {
+    height: 30,
+    width: 30,
+    tintColor: '#4551cc',
+  },
+  toolIconDisabled: {
+    height: 30,
+    width: 30,
+    tintColor: '#b8b8b8',
+  },
+  navBtn: {
+    flex: 1,
+    alignItems: 'center',
   }
 });
 
