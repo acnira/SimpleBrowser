@@ -13,7 +13,7 @@ class App extends Component {
       currentUrl: 'https://github.com/facebook/react-native',
       canGoBack: false,
       canGoForward: false
-    })
+    });
   }
 
   onNavigationStateChange(navState) {
@@ -62,7 +62,7 @@ class App extends Component {
               disabled={!this.state.canGoBack}
               onPress={this.onBack.bind(this)}
               >
-              <Text style={this.state.canGoBack?styles.topbarText:styles.topbarTextDisabled}>Go Back</Text>
+              <Text style={this.state.canGoBack?styles.topbarText:styles.topbarTextDisabled}>Back</Text>
             </TouchableOpacity>
           </View>
           <View style={styles.navBtn}>
@@ -70,7 +70,7 @@ class App extends Component {
               disabled={!this.state.canGoForward}
               onPress={this.onForward.bind(this)}
               >
-              <Text style={this.state.canGoForward?styles.topbarText:styles.topbarTextDisabled}>Go Forward</Text>
+              <Text style={this.state.canGoForward?styles.topbarText:styles.topbarTextDisabled}>Forward</Text>
             </TouchableOpacity>
           </View>
           <View style={styles.navBtn}>
@@ -101,20 +101,29 @@ const styles = StyleSheet.create({
   topbar:{
     borderColor: "#959595",
     borderWidth: 2,
+    paddingTop: 5,
     flexDirection:'row', 
     alignItems:'center', 
     justifyContent:'center'
   },
   navBtn:{
+    borderColor: "#ff0000",
+    borderWidth: 2,
+    marginLeft: 2,
+    marginRight: 2,
     flex: 1
   },
   topbarText:{
     fontSize: 20,
-    color: "#2e79bf"
+    color: "#2e79bf",
+    textAlign:'center', 
+    justifyContent:'center'
   },
   topbarTextDisabled:{
     fontSize: 20,
-    color: "#454545"
+    color: "#454545",
+    textAlign:'center', 
+    justifyContent:'center'
   }
 });
 
