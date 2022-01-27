@@ -1,3 +1,5 @@
+Github repository: https://github.com/acnira/SimpleBrowser.git
+
 How to run the application?
 1. Install Node.js, React-native and Android Studio following guide in https://reactnative.dev/docs/environment-setup.
 2. Run "npm install" for installing the dependencies used in this project for your environment.
